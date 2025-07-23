@@ -1,0 +1,589 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="description" content="Admin panel for visitor management.">
+  <meta name="author" content="xAI Enhanced Design">
+  <title>Admin - Visitor Control</title>
+  <!-- Font Awesome -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --primary: #4f46e5; /* Indigo */
+      --secondary: #ec4899; /* Pink */
+      --bg-dark: #0a0f2a; /* Deep navy */
+      --bg-darker: #141a3f; /* Darker navy */
+      --text-light: #e2e8f0; /* Light gray */
+      --success: #10b981; /* Green */
+      --error: #f43f5e; /* Red */
+      --light-mode-bg: #f8fafc; /* Off-white */
+      --light-mode-text: #1e293b; /* Dark slate */
+      --glow: 0 0 8px rgba(79, 70, 229, 0.4);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-light);
+      min-height: 100vh;
+      padding: 1rem;
+      transition: background 0.3s ease;
+    }
+
+    body.light-mode {
+      background: var(--light-mode-bg);
+      color: var(--light-mode-text);
+    }
+
+    .container {
+      background: var(--bg-darker);
+      backdrop-filter: blur(5px);
+      padding: 1.2rem;
+      border-radius: 8px;
+      max-width: 960px;
+      margin: 0 auto;
+      box-shadow: var(--glow);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .light-mode .container {
+      background: var(--light-mode-bg);
+      border: 1px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .light-mode .header {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .form-title {
+      font-size: clamp(1.4rem, 2.5vw, 1.7rem);
+      font-weight: 800;
+      color: var(--primary);
+    }
+
+    .form-subtitle {
+      font-size: 0.8rem;
+      opacity: 0.7;
+    }
+
+    .light-mode .form-subtitle {
+      color: var(--light-mode-text);
+    }
+
+    .visitor-table {
+      width: 100%;
+      border-collapse: collapse;
+      background: var(--bg-darker);
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .light-mode .visitor-table {
+      background: var(--light-mode-bg);
+    }
+
+    .visitor-table th,
+    .visitor-table td {
+      padding: 0.6rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .light-mode .visitor-table th,
+    .light-mode .visitor-table td {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+    }
+
+    .visitor-table th {
+      font-weight: 600;
+      color: var(--primary);
+      background: var(--bg-dark);
+    }
+
+    .light-mode .visitor-table th {
+      background: var(--light-mode-bg);
+    }
+
+    .visitor-table td {
+      font-size: 0.8rem;
+    }
+
+    .visitor-table tr {
+      transition: background 0.2s ease;
+    }
+
+    .visitor-table tr:hover {
+      background: rgba(79, 70, 229, 0.15);
+    }
+
+    .btn {
+      padding: 0.4rem 0.8rem;
+      border-radius: 5px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.8rem;
+      font-weight: 600;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.3rem;
+      transition: all 0.2s ease;
+    }
+
+    .btn-approve {
+      background: var(--success);
+      color: white;
+      box-shadow: var(--glow);
+    }
+
+    .btn-approve:hover {
+      background: #059669;
+      transform: translateY(-1px);
+      box-shadow: 0 2px 6px rgba(16, 185, 129, 0.5);
+    }
+
+    .btn-export {
+      background: var(--secondary);
+      color: white;
+      padding: 0.5rem 1rem;
+      font-size: 0.9rem;
+      box-shadow: var(--glow);
+    }
+
+    .btn-export:hover {
+      background: #db2777;
+      transform: scale(1.05);
+      box-shadow: 0 2px 8px rgba(236, 72, 153, 0.5);
+    }
+
+    .btn:disabled {
+      background: #4b5563;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn.loading::after {
+      content: '';
+      width: 10px;
+      height: 10px;
+      border: 2px solid white;
+      border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .status-message {
+      padding: 0.6rem;
+      border-radius: 5px;
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      font-weight: 600;
+      opacity: 0;
+      transform: translateY(-100px);
+      transition: all 0.3s ease;
+      position: fixed;
+      top: 15px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: calc(100% - 30px);
+      max-width: 360px;
+      z-index: 1000;
+      box-shadow: var(--glow);
+    }
+
+    .status-message.show {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .success {
+      color: var(--success);
+      background: rgba(16, 185, 129, 0.2);
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .error {
+      color: var(--error);
+      background: rgba(244, 63, 94, 0.2);
+      border: 1px solid rgba(244, 63, 94, 0.3);
+    }
+
+    .theme-toggle {
+      background: var(--bg-darker);
+      backdrop-filter: blur(4px);
+      border: none;
+      color: var(--text-light);
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--glow);
+    }
+
+    .light-mode .theme-toggle {
+      background: var(--light-mode-bg);
+      color: var(--light-mode-text);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    }
+
+    .theme-toggle:hover {
+      transform: rotate(20deg) scale(1.1);
+    }
+
+    .loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(10, 15, 42, 0.7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .loading-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .loading-spinner {
+      width: 30px;
+      height: 30px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s ease-in-out infinite;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 1rem;
+      opacity: 0.7;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 0.8rem;
+        max-width: 95%;
+      }
+
+      .visitor-table {
+        display: block;
+        overflow-x: auto;
+      }
+
+      .visitor-table th,
+      .visitor-table td {
+        min-width: 85px;
+      }
+
+      .header {
+        flex-direction: column;
+        gap: 0.4rem;
+        align-items: flex-start;
+      }
+
+      .btn-export {
+        width: 100%;
+        max-width: 160px;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .form-title {
+        font-size: 1.2rem;
+      }
+
+      .btn {
+        padding: 0.3rem 0.6rem;
+        font-size: 0.75rem;
+      }
+
+      .btn-export {
+        font-size: 0.85rem;
+      }
+    }
+
+    @media print {
+      body, .container, .visitor-table, .visitor-table th {
+        background: white !important;
+        color: black !important;
+        box-shadow: none !important;
+        border: none !important;
+      }
+
+      .theme-toggle, .btn, .btn-export {
+        display: none !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="loading-overlay" id="loadingOverlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <div class="container">
+    <div class="header">
+      <div>
+        <h1 class="form-title">IMS <i class="fas fa-lock"></i></h1>
+        <p class="form-subtitle">Manage arrivals with IMS panel</p>
+      </div>
+      <div>
+        <button class="theme-toggle" aria-label="Toggle theme" onclick="toggleTheme()">
+          <i class="fas fa-moon"></i>
+        </button>
+        <button class="btn btn-export" aria-label="Export to CSV" onclick="exportToCSV()">
+          <i class="fas fa-download"></i> Export CSV
+        </button>
+      </div>
+    </div>
+
+    <div class="status-message success" id="successMessage">
+      <i class="fas fa-check-circle"></i> Action completed!
+    </div>
+    <div class="status-message error" id="errorMessage">
+      <i class="fas fa-exclamation-circle"></i> Error occurred.
+    </div>
+
+    <table class="visitor-table" id="visitorTable">
+      <thead>
+        <tr>
+          <th style="width: 20%;"><i class="fas fa-user"></i> Name</th>
+          <th style="width: 15%;"><i class="fas fa-id-card"></i> ID</th>
+          <th style="width: 20%;"><i class="fas fa-building"></i> Department</th>
+          <th style="width: 15%;"><i class="far fa-calendar-alt"></i> Date</th>
+          <th style="width: 15%;"><i class="fas fa-check-circle"></i> Status</th>
+          <th style="width: 15%;"><i class="fas fa-cog"></i> Actions</th>
+        </tr>
+      </thead>
+      <tbody id="visitorTableBody">
+        <tr>
+          <td colspan="6" class="empty-state">Loading data...</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script type="module">
+    const loadFirebase = async () => {
+      try {
+        const { initializeApp } = await import("https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js");
+        const { getFirestore, collection, getDocs, doc, updateDoc } = await import("https://www.gstatic.com/firebasejs/10.11.1/firebase-firestore.js");
+        return { initializeApp, getFirestore, collection, getDocs, doc, updateDoc };
+      } catch (error) {
+        console.error("Failed to load Firebase:", error);
+        showStatusMessage("Resource load failed.", 'error');
+        throw error;
+      }
+    };
+
+    (async () => {
+      const loadingOverlay = document.getElementById("loadingOverlay");
+      const visitorTableBody = document.getElementById("visitorTableBody");
+      const successMessage = document.getElementById("successMessage");
+      const errorMessage = document.getElementById("errorMessage");
+      const themeToggle = document.querySelector('.theme-toggle i');
+      let db, visitorsData = [];
+
+      function toggleTheme() {
+        document.body.classList.toggle('light-mode');
+        themeToggle.classList.toggle('fa-moon');
+        themeToggle.classList.toggle('fa-sun');
+        localStorage.setItem('lightMode', document.body.classList.contains('light-mode'));
+      }
+
+      if (localStorage.getItem('lightMode') === 'true') {
+        document.body.classList.add('light-mode');
+        themeToggle.classList.remove('fa-moon');
+        themeToggle.classList.add('fa-sun');
+      }
+
+      function sanitizeInput(input) {
+        if (!input) return '';
+        const div = document.createElement('div');
+        div.textContent = input;
+        return div.innerHTML;
+      }
+
+      function showStatusMessage(message, type = 'success') {
+        const element = type === 'success' ? successMessage : errorMessage;
+        element.innerHTML = `<i class="fas ${type === 'success' ? 'fa-check-circle' : 'fa-exclamation-circle'}"></i> ${sanitizeInput(message)}`;
+        element.classList.add('show');
+        if (element.timeout) clearTimeout(element.timeout);
+        element.timeout = setTimeout(() => element.classList.remove('show'), 2000);
+      }
+
+      try {
+        loadingOverlay.classList.add('active');
+        const { initializeApp, getFirestore, collection, getDocs, doc, updateDoc } = await loadFirebase();
+        const firebaseConfig = {
+          apiKey: "AIzaSyA5lyEP6r5sgMOeFxHz_tVsSk9c1nNXUkY",
+          authDomain: "penguinpixel-cfaf2.firebaseapp.com",
+          projectId: "penguinpixel-cfaf2",
+          storageBucket: "penguinpixel-cfaf2.appspot.com",
+          messagingSenderId: "161642251943",
+          appId: "1:161642251943:web:6c99e93270c3900379fd82",
+          measurementId: "G-8DTF1BQ4HN"
+        };
+        const app = initializeApp(firebaseConfig);
+        db = getFirestore(app);
+        window.firebaseModules = { collection, getDocs, doc, updateDoc };
+      } catch (error) {
+        console.error("Firebase init failed:", error);
+        showStatusMessage("Database connection failed.", 'error');
+        visitorTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Database error.</td></tr>';
+        loadingOverlay.classList.remove('active');
+        return;
+      }
+
+      async function approveVisitor(docId, button) {
+        if (!db) return showStatusMessage("Database not initialized.", 'error');
+        button.disabled = true;
+        button.classList.add('loading');
+        button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Approving...';
+
+        try {
+          const { doc, updateDoc } = window.firebaseModules;
+          const docRef = doc(db, "arrivalNotes", docId);
+          await updateDoc(docRef, { approved: true, updatedAt: new Date() });
+          const row = button.closest('tr');
+          row.querySelector('.status').innerHTML = '<i class="fas fa-check-circle"></i> Approved';
+          row.querySelector('td:last-child').innerHTML = '<span class="approved-text">Approved</span>';
+          showStatusMessage("Visitor approved!", 'success');
+          visitorsData.find(v => v.docId === docId).approved = true;
+        } catch (error) {
+          console.error("Error approving:", error);
+          showStatusMessage("Approval failed.", 'error');
+          button.disabled = false;
+          button.classList.remove('loading');
+          button.innerHTML = '<i class="fas fa-check"></i> Approve';
+        }
+      }
+
+      function exportToCSV() {
+        if (!visitorsData.length) return showStatusMessage("No data to export.", 'error');
+        const headers = ['Name', 'ID', 'Department', 'Date', 'Status'];
+        const csvRows = [
+          headers.join(','),
+          ...visitorsData.map(data =>
+            [
+              `"${sanitizeInput(data.name)}"`,
+              `"${sanitizeInput(data.id || '')}"`,
+              `"${sanitizeInput(data.department)}"`,
+              `"${data.date ? new Date(data.date).toLocaleDateString() : 'N/A'}"`,
+              data.approved ? 'Approved' : 'Pending'
+            ].join(',')
+          )
+        ];
+        const csv = csvRows.join('\n');
+        const blob = new Blob([csv], { type: 'text/csv' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `visitors_${new Date().toISOString().slice(0, 10)}.csv`;
+        a.click();
+        URL.revokeObjectURL(url);
+        showStatusMessage("Exported to CSV!", 'success');
+      }
+
+      async function loadVisitors() {
+        if (!db) return;
+        try {
+          const { collection, getDocs } = window.firebaseModules;
+          const querySnapshot = await getDocs(collection(db, "arrivalNotes"));
+          visitorTableBody.innerHTML = '';
+          if (querySnapshot.empty) {
+            visitorTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">No records found.</td></tr>';
+            return;
+          }
+          visitorsData = [];
+          const rows = [];
+          querySnapshot.forEach(docSnap => {
+            const data = docSnap.data();
+            const docId = docSnap.id;
+            const visitDate = data.date ? new Date(data.date).toLocaleDateString() : 'N/A';
+            const id = data.id || ''; // Use 'id' field
+            console.log('Document data:', { docId, ...data }); // Debug log
+            visitorsData.push({ ...data, docId, id });
+            const row = document.createElement('tr');
+            row.innerHTML = `
+              <td class="name">${sanitizeInput(data.name)}</td>
+              <td>${sanitizeInput(id)}</td>
+              <td>${sanitizeInput(data.department)}</td>
+              <td>${visitDate}</td>
+              <td class="status">${data.approved ? '<i class="fas fa-check-circle"></i> Approved' : '<i class="fas fa-hourglass-half"></i> Pending'}</td>
+              <td>${!data.approved ? `<button class="btn btn-approve" onclick="approveVisitor('${docId}', this)"><i class="fas fa-check"></i> Approve</button>` : '<span class="approved-text">Approved</span>'}</td>
+            `;
+            rows.push(row);
+          });
+          visitorTableBody.append(...rows);
+        } catch (error) {
+          console.error("Error loading:", error);
+          showStatusMessage("Error loading data.", 'error');
+          visitorTableBody.innerHTML = '<tr><td colspan="6" class="empty-state">Error loading.</td></tr>';
+        } finally {
+          loadingOverlay.classList.remove('active');
+        }
+      }
+
+      window.approveVisitor = approveVisitor;
+      window.toggleTheme = toggleTheme;
+      window.exportToCSV = exportToCSV;
+
+      document.addEventListener('DOMContentLoaded', () => {
+        loadVisitors();
+        document.addEventListener('keydown', e => {
+          if (e.key === 'Escape') {
+            successMessage.classList.remove('show');
+            errorMessage.classList.remove('show');
+          }
+        });
+      });
+
+      window.addEventListener('error', error => {
+        console.error('Uncaught error:', error);
+        showStatusMessage('Unexpected error.', 'error');
+        loadingOverlay.classList.remove('active');
+      });
+
+      loadVisitors();
+    })();
+  </script>
+</body>
+</html>
