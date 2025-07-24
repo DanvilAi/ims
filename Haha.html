@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="sw">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Ufuatiliaji wa Oda | Gson Engineering</title>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --black: #121212;
+      --dark: #1E1E1E;
+      --gray: #2D2D2D;
+      --light: #F5F5F5;
+      --primary: #00A8FF;
+      --accent: #0095F6;
+      --success: #4CAF50;
+      --warning: #FFC107;
+      --text: #E0E0E0;
+      --error: #FF4848;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Manrope', -apple-system, BlinkMacSystemFont, sans-serif;
+    }
+    
+    body {
+      background-color: var(--black);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    
+    .container {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 24px 16px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 32px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--gray);
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .logo-icon {
+      color: var(--primary);
+      font-size: 24px;
+    }
+    
+    .logo-text {
+      font-weight: 700;
+      font-size: 20px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .ig-handle {
+      color: var(--text);
+      font-size: 14px;
+      opacity: 0.8;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: opacity 0.2s;
+    }
+    
+    .ig-handle:hover {
+      opacity: 1;
+    }
+    
+    .card {
+      background-color: var(--dark);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid var(--gray);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+    }
+    
+    .card-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+      text-align: center;
+    }
+    
+    .card-subtitle {
+      font-size: 14px;
+      color: rgba(224, 224, 224, 0.7);
+      text-align: center;
+      margin-bottom: 24px;
+    }
+    
+    .input-group {
+      margin-bottom: 20px;
+    }
+    
+    .input-label {
+      display: block;
+      font-size: 14px;
+      margin-bottom: 8px;
+      color: rgba(224, 224, 224, 0.8);
+    }
+    
+    .input-field {
+      width: 100%;
+      padding: 14px;
+      background-color: var(--black);
+      border: 1px solid var(--gray);
+      border-radius: 8px;
+      color: var(--text);
+      font-size: 15px;
+      transition: border-color 0.2s;
+    }
+    
+    .input-field:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    .btn {
+      width: 100%;
+      padding: 14px;
+      background: linear-gradient(90deg, var(--primary), var(--accent));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      font-size: 15px;
+      cursor: pointer;
+      transition: transform 0.2s, opacity 0.2s, box-shadow 0.2s;
+      box-shadow: 0 2px 8px rgba(0, 168, 255, 0.2);
+    }
+    
+    .btn:hover {
+      opacity: 0.9;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 168, 255, 0.3);
+    }
+    
+    .btn:active {
+      transform: translateY(0);
+      box-shadow: 0 2px 6px rgba(0, 168, 255, 0.2);
+    }
+    
+    .btn:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+      transform: none !important;
+    }
+    
+    .status-container {
+      background-color: var(--dark);
+      border-radius: 12px;
+      padding: 24px;
+      margin-bottom: 24px;
+      border: 1px solid var(--gray);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+      display: none;
+    }
+    
+    .status-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+    
+    .status-title {
+      font-size: 18px;
+      font-weight: 600;
+    }
+    
+    .status-badge {
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    
+    .status-badge.completed {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: var(--success);
+    }
+    
+    .status-badge.processing {
+      background-color: rgba(255, 193, 7, 0.1);
+      color: var(--warning);
+    }
+    
+    .status-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 16px;
+    }
+    
+    .status-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-size: 13px;
+      font-weight: 600;
+      background-color: var(--gray);
+    }
+    
+    .status-table td {
+      padding: 12px 16px;
+      font-size: 14px;
+      border-bottom: 1px solid var(--gray);
+    }
+    
+    .status-table tr:last-child td {
+      border-bottom: none;
+    }
+    
+    .status-table tr:hover td {
+      background-color: rgba(0, 168, 255, 0.05);
+    }
+    
+    .message {
+      padding: 14px;
+      border-radius: 8px;
+      font-size: 14px;
+      margin: 16px 0;
+      text-align: center;
+      display: none;
+      animation: fadeIn 0.3s ease;
+    }
+    
+    .message.error {
+      background-color: rgba(255, 72, 72, 0.1);
+      color: var(--error);
+      display: block;
+      border: 1px solid rgba(255, 72, 72, 0.3);
+    }
+    
+    .message.success {
+      background-color: rgba(76, 175, 80, 0.1);
+      color: var(--success);
+      display: block;
+      border: 1px solid rgba(76, 175, 80, 0.3);
+    }
+    
+    .message.info {
+      background-color: rgba(0, 168, 255, 0.1);
+      color: var(--primary);
+      display: block;
+      border: 1px solid rgba(0, 168, 255, 0.3);
+    }
+    
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: white;
+      animation: spin 1s ease-in-out infinite;
+      margin-right: 8px;
+      vertical-align: middle;
+    }
+    
+    .tech-features {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin: 32px 0;
+    }
+    
+    .tech-feature {
+      background-color: var(--dark);
+      border: 1px solid var(--gray);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .tech-feature:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.15);
+    }
+    
+    .tech-icon {
+      font-size: 24px;
+      color: var(--primary);
+      margin-bottom: 12px;
+    }
+    
+    .tech-title {
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .tech-desc {
+      font-size: 12px;
+      color: rgba(224, 224, 224, 0.7);
+    }
+    
+    .location {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      font-size: 14px;
+      color: rgba(224, 224, 224, 0.8);
+      margin-top: 24px;
+    }
+    
+    footer {
+      text-align: center;
+      padding: 24px 0;
+      font-size: 13px;
+      color: rgba(224, 224, 224, 0.6);
+      border-top: 1px solid var(--gray);
+      margin-top: auto;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    @media (max-width: 500px) {
+      .container {
+        padding: 16px;
+      }
+      
+      .tech-features {
+        grid-template-columns: 1fr;
+      }
+      
+      .status-table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">
+        <i class="fas fa-cogs logo-icon"></i>
+        <span class="logo-text">Gson Engineering</span>
+      </div>
+      <a href="https://instagram.com/gson_eng" class="ig-handle" target="_blank">
+        <i class="fab fa-instagram"></i>
+        @gson_eng
+      </a>
+    </header>
+    
+    <div class="card">
+      <h2 class="card-title">Ufuatiliaji wa Oda</h2>
+      <p class="card-subtitle">Weka namba yako ya simu kuangalia hali ya incubator yako</p>
+      
+      <div class="input-group">
+        <label class="input-label">Namba ya Simu</label>
+        <input type="tel" class="input-field" id="checkPhone" placeholder="Mfano: 0712345678" maxlength="10">
+      </div>
+      
+      <button class="btn" id="checkButton" onclick="checkOrder()">
+        <i class="fas fa-search" style="margin-right: 8px;"></i>
+        Angalia Hali
+      </button>
+      
+      <div id="message" class="message"></div>
+    </div>
+    
+    <div id="statusContainer" class="status-container">
+      <div class="status-header">
+        <h3 class="status-title">Taarifa za Oda</h3>
+        <span id="statusBadge" class="status-badge"></span>
+      </div>
+      <table class="status-table">
+        <tbody id="resultBody">
+          <!-- Results will be inserted here -->
+        </tbody>
+      </table>
+    </div>
+    
+    <div class="tech-features">
+      <div class="tech-feature">
+        <div class="tech-icon"><i class="fas fa-thermometer-half"></i></div>
+        <div class="tech-title">Udhibiti Sahihi</div>
+        <div class="tech-desc">Usahihi wa joto ±0.5°C</div>
+      </div>
+      <div class="tech-feature">
+        <div class="tech-icon"><i class="fas fa-tint"></i></div>
+        <div class="tech-title">Teknolojia ya Unyevu</div>
+        <div class="tech-desc">Udhibiti wa unyevu wa kiotomatiki</div>
+      </div>
+      <div class="tech-feature">
+        <div class="tech-icon"><i class="fas fa-sync-alt"></i></div>
+        <div class="tech-title">Kugeuza Kiotomatiki</div>
+        <div class="tech-desc">Muda unaoweza kutengenezwa</div>
+      </div>
+      <div class="tech-feature">
+        <div class="tech-icon"><i class="fas fa-bolt"></i></div>
+        <div class="tech-title">Nishati ya Ufanisi</div>
+        <div class="tech-desc">Matumizi ya nishati ya chini</div>
+      </div>
+    </div>
+    
+    <div class="location">
+      <i class="fas fa-map-marker-alt"></i>
+      <span>Mwanza, Tanzania</span>
+    </div>
+    
+    <footer>
+      <p>© 2023 Gson Engineering • Haki zote zimehifadhiwa</p>
+    </footer>
+  </div>
+
+  <script>
+    const firebaseConfig = {
+      apiKey: "AIzaSyBF8CvWpyzoHEnR_EqWylgMu2pn0r6GWzQ",
+      authDomain: "gson-22e79.firebaseapp.com",
+      projectId: "gson-22e79",
+      storageBucket: "gson-22e79.appspot.com",
+      messagingSenderId: "182574533801",
+      appId: "1:182574533801:web:f8e2813a3b3dcc6737adb8"
+    };
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
+    function checkOrder() {
+      const phone = document.getElementById("checkPhone").value.trim();
+      const resultBody = document.getElementById("resultBody");
+      const statusContainer = document.getElementById("statusContainer");
+      const message = document.getElementById("message");
+      const checkButton = document.getElementById("checkButton");
+      const statusBadge = document.getElementById("statusBadge");
+
+      resultBody.innerHTML = "";
+      statusContainer.style.display = "none";
+      message.textContent = "";
+      message.className = "message";
+
+      if (!phone) {
+        showMessage("Tafadhali weka namba yako ya simu", "error");
+        return;
+      }
+
+      // Tanzanian phone number validation
+      const phoneRegex = /^0[67]\d{8}$/;
+      if (!phoneRegex.test(phone)) {
+        showMessage("Tafadhali weka namba sahihi ya simu ya Tanzania (mfano: 0712345678)", "error");
+        return;
+      }
+
+      // Show loading state
+      checkButton.disabled = true;
+      checkButton.innerHTML = `<span class="loading"></span>Inatafuta...`;
+
+      db.collection("orders").where("phone", "==", phone).get().then(snapshot => {
+        if (snapshot.empty) {
+          showMessage("Hakuna oda iliyopatikana kwa namba hii ya simu", "error");
+        } else {
+          snapshot.forEach(doc => {
+            const data = doc.data();
+            const statusText = data.status === true ? 'Imekamilika' : 'Inafanyiwa kazi';
+            const statusClass = data.status === true ? 'completed' : 'processing';
+            
+            statusBadge.textContent = statusText;
+            statusBadge.className = `status-badge ${statusClass}`;
+            
+            const rows = `
+              <tr>
+                <td><strong>Jina:</strong></td>
+                <td>${data.name || '--'}</td>
+              </tr>
+              <tr>
+                <td><strong>Mahali:</strong></td>
+                <td>${data.location || '--'}</td>
+              </tr>
+              <tr>
+                <td><strong>Simu:</strong></td>
+                <td>${data.phone || '--'}</td>
+              </tr>
+              <tr>
+                <td><strong>Modeli:</strong></td>
+                <td>${data.machine || '--'}</td>
+              </tr>
+              <tr>
+                <td><strong>Tarehe ya Oda:</strong></td>
+                <td>${formatDate(data.orderDate) || '--'}</td>
+              </tr>
+              <tr>
+                <td><strong>Makadirio ya Kukamilika:</strong></td>
+                <td>${formatDate(data.completionDate) || '--'}</td>
+              </tr>`;
+            
+            resultBody.innerHTML = rows;
+          });
+          
+          statusContainer.style.display = "block";
+          showMessage("Taarifa za oda zimepatikana kikamilifu", "success");
+          
+          // Scroll to results
+          setTimeout(() => {
+            statusContainer.scrollIntoView({ behavior: 'smooth' });
+          }, 300);
+        }
+      }).catch(error => {
+        console.error("Error checking order:", error);
+        showMessage("Kosa limetokea wakati wa kutafuta oda. Tafadhali jaribu tena baadaye.", "error");
+      }).finally(() => {
+        checkButton.disabled = false;
+        checkButton.innerHTML = `<i class="fas fa-search" style="margin-right: 8px;"></i>Angalia Hali`;
+      });
+    }
+    
+    function showMessage(text, type) {
+      const message = document.getElementById("message");
+      message.textContent = text;
+      message.className = `message ${type}`;
+    }
+    
+    function formatDate(timestamp) {
+      if (!timestamp) return null;
+      
+      const date = timestamp.toDate();
+      return date.toLocaleDateString('sw-TZ', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric'
+      });
+    }
+    
+    // Allow checking with Enter key
+    document.getElementById("checkPhone").addEventListener("keyup", function(event) {
+      if (event.key === "Enter") {
+        checkOrder();
+      }
+    });
+  </script>
+</body>
+</html>
