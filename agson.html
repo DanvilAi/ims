@@ -1,0 +1,825 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gson RG - Receipt Generator</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #4338ca;
+      --secondary: #f8fafc;
+      --text: #1e293b;
+      --text-light: #64748b;
+      --border: #e2e8f0;
+      --background: #ffffff;
+      --border-radius: 12px;
+      --box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      --accent: #10b981;
+      --danger: #ef4444;
+      --app-bg: #f1f5f9;
+      --header-height: 60px;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background-color: var(--app-bg);
+      color: var(--text);
+      line-height: 1.5;
+      min-height: 100vh;
+    }
+
+    @media print {
+      body * {
+        visibility: hidden;
+      }
+      #receiptBox, #receiptBox * {
+        visibility: visible;
+      }
+      #receiptBox {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        max-width: 350px;
+        margin: 0 auto;
+        box-shadow: none;
+        padding: 15mm;
+      }
+      .no-print {
+        display: none !important;
+      }
+    }
+
+    .app-header {
+      height: var(--header-height);
+      background-color: var(--primary);
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 1.5rem;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      position: sticky;
+      top: 0;
+      z-index: 100;
+    }
+
+    .app-title {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 1.2rem;
+    }
+
+    .app-icon {
+      font-size: 1.5rem;
+    }
+
+    .app-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 1.5rem;
+      display: grid;
+      gap: 1.5rem;
+      grid-template-columns: 1fr 1fr;
+    }
+
+    @media (max-width: 768px) {
+      .app-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--background);
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 1.5rem;
+      height: fit-content;
+    }
+
+    .card-header {
+      margin-bottom: 1.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+      padding-bottom: 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .card-icon {
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+
+    .form-group {
+      margin-bottom: 1.25rem;
+    }
+
+    label {
+      display: block;
+      font-weight: 500;
+      font-size: 0.9rem;
+      margin-bottom: 0.5rem;
+      color: var(--text);
+    }
+
+    .required:after {
+      content: " *";
+      color: var(--danger);
+    }
+
+    input, select {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      border: 1px solid var(--border);
+      border-radius: var(--border-radius);
+      font-size: 0.95rem;
+      background: var(--background);
+      transition: all 0.2s ease;
+    }
+
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+    }
+
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--border-radius);
+      font-weight: 500;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      display: inline-flex;
+      gap: 0.5rem;
+      align-items: center;
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--secondary);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+
+    .btn-secondary:hover {
+      background: #e2e8f0;
+      transform: translateY(-1px);
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 1rem;
+      margin-top: 1.5rem;
+    }
+
+    .receipt {
+      max-width: 380px;
+      margin: 0 auto;
+      background: var(--background);
+      border-radius: var(--border-radius);
+      padding: 1.75rem;
+      display: none;
+      border: 1px solid var(--border);
+      box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+    }
+
+    .receipt-header {
+      text-align: center;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .receipt-title {
+      font-size: 1.4rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+    }
+
+    .receipt-company {
+      font-size: 0.85rem;
+      color: var(--text-light);
+      margin-bottom: 0.5rem;
+    }
+
+    .receipt-address {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      line-height: 1.4;
+    }
+
+    .receipt-info {
+      display: grid;
+      gap: 0.75rem;
+      margin-bottom: 1.5rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px dashed var(--border);
+    }
+
+    .receipt-item {
+      font-size: 0.9rem;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .receipt-label {
+      font-weight: 500;
+      color: var(--text-light);
+    }
+
+    .receipt-value {
+      color: var(--text);
+      font-weight: 500;
+    }
+
+    .receipt-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.5rem 0;
+    }
+
+    .receipt-table th, .receipt-table td {
+      padding: 0.75rem 0.5rem;
+      font-size: 0.9rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .receipt-table th {
+      text-align: left;
+      font-weight: 500;
+      color: var(--text-light);
+    }
+
+    .receipt-table .text-right {
+      text-align: right;
+    }
+
+    .receipt-qr {
+      text-align: center;
+      margin: 1.5rem 0;
+    }
+
+    .receipt-footer {
+      text-align: center;
+      font-size: 0.8rem;
+      color: var(--text-light);
+      padding-top: 1rem;
+      border-top: 1px dashed var(--border);
+    }
+
+    .receipt-actions {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+      flex-wrap: wrap;
+    }
+
+    .fade-in {
+      animation: fadeIn 0.3s ease-out;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .currency-input {
+      position: relative;
+    }
+
+    .currency-symbol {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      font-weight: 500;
+      color: var(--text-light);
+    }
+
+    .currency-input input {
+      padding-left: 2.5rem;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: var(--accent);
+    }
+
+    .status-text {
+      font-size: 0.8rem;
+      color: var(--text-light);
+    }
+
+    @media (max-width: 480px) {
+      .app-container {
+        padding: 1rem;
+      }
+      .card, .receipt {
+        padding: 1.25rem;
+      }
+      .btn-group, .receipt-actions {
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="app-header">
+    <div class="app-title">
+      <i class="fas fa-receipt app-icon"></i>
+      <span>Gson RG</span>
+    </div>
+    <div class="status-bar">
+      <div class="status-dot"></div>
+      <div class="status-text">Online</div>
+    </div>
+  </header>
+
+  <main class="app-container">
+    <div class="card">
+      <div class="card-header">
+        <i class="fas fa-edit card-icon"></i> Transaction Details
+      </div>
+      <div class="form-group">
+        <label class="required" for="customerName">Customer Name</label>
+        <input type="text" id="customerName" placeholder="Pius" required>
+      </div>
+      <div class="form-group">
+        <label class="required" for="product">Service/Product</label>
+        <input type="text" id="product" placeholder="Website Development" required>
+      </div>
+      <div class="form-group currency-input">
+        <label class="required" for="amount">Amount (TZS)</label>
+        <span class="currency-symbol">TSh</span>
+        <input type="text" id="amount" placeholder="500,000" required>
+      </div>
+      <div class="form-group">
+        <label for="method">Payment Method</label>
+        <select id="method">
+          <option value="">Select method</option>
+          <option value="Cash">Cash</option>
+          <option value="M-Pesa">M-Pesa</option>
+          <option value="Airtel Money">Airtel Money</option>
+          <option value="Tigo Pesa">Tigo Pesa</option>
+          <option value="Bank Transfer">Bank Transfer</option>
+          <option value="Credit Card">Credit Card</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="phone">Phone Number (Optional)</label>
+        <input type="text" id="phone" placeholder="07XXXXXXXX">
+      </div>
+      <div class="btn-group">
+        <button class="btn btn-primary" id="generateBtn">
+          <i class="fas fa-receipt"></i> Generate Receipt
+        </button>
+        <button class="btn btn-secondary" id="clearBtn">
+          <i class="fas fa-eraser"></i> Clear Form
+        </button>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <i class="fas fa-receipt card-icon"></i> Receipt Preview
+      </div>
+      <div class="receipt" id="receiptBox">
+        <div class="receipt-header">
+          <h3 class="receipt-title">OFFICIAL RECEIPT</h3>
+          <p class="receipt-company">GSON ENGINEERING & TECHNOLOGIES</p>
+          <p class="receipt-address">
+            Mwanza<br>
+            Phone: 0744983225<br>
+          </p>
+        </div>
+        <div class="receipt-info">
+          <div class="receipt-item">
+            <span class="receipt-label">TIN</span>
+            <span class="receipt-value" id="rTin">142-388-375</span>
+          </div>
+          <div class="receipt-item">
+            <span class="receipt-label">Date</span>
+            <span class="receipt-value" id="rDate"></span>
+          </div>
+          <div class="receipt-item">
+            <span class="receipt-label">Customer</span>
+            <span class="receipt-value" id="rCustomer"></span>
+          </div>
+          <div class="receipt-item" id="rPhoneContainer">
+            <span class="receipt-label">Phone</span>
+            <span class="receipt-value" id="rPhone"></span>
+          </div>
+          <div class="receipt-item">
+            <span class="receipt-label">Payment Method</span>
+            <span class="receipt-value" id="rMethod"></span>
+          </div>
+        </div>
+        <table class="receipt-table">
+          <thead>
+            <tr>
+              <th>Description</th>
+              <th class="text-right">Amount (TZS)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td id="rProduct"></td>
+              <td class="text-right"><span id="rAmount"></span></td>
+            </tr>
+            <tr>
+              <td><strong>Total</strong></td>
+              <td class="text-right"><strong><span id="rTotal"></span></strong></td>
+            </tr>
+          </tbody>
+        </table>
+        <div class="receipt-qr no-print" id="qrcode"></div>
+        <div class="receipt-footer">
+          <p>Thank you for your business!</p>
+          <p>For inquiries: call 0744983225</p>
+        </div>
+      </div>
+      <div class="receipt-actions hidden no-print" id="actionButtons">
+        <button class="btn btn-primary" id="printBtn">
+          <i class="fas fa-print"></i> Print Receipt
+        </button>
+        <button class="btn btn-primary" id="downloadBtn">
+          <i class="fas fa-file-pdf"></i> Save as PDF
+        </button>
+        <button class="btn btn-secondary" id="newReceiptBtn">
+          <i class="fas fa-plus"></i> New Receipt
+        </button>
+      </div>
+    </div>
+  </main>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      document.getElementById('generateBtn').addEventListener('click', generateReceipt);
+      document.getElementById('clearBtn').addEventListener('click', clearForm);
+      document.getElementById('printBtn').addEventListener('click', printReceipt);
+      document.getElementById('downloadBtn').addEventListener('click', downloadReceipt);
+      document.getElementById('newReceiptBtn').addEventListener('click', clearForm);
+      document.getElementById('amount').addEventListener('input', formatCurrencyInput);
+      document.getElementById('phone').addEventListener('input', formatPhoneInput);
+
+      // Focus on customer name field when page loads
+      document.getElementById('customerName').focus();
+
+      // Show welcome message
+      Swal.fire({
+        title: 'Welcome to Gson RG',
+        text: 'Create professional receipts with ease!',
+        icon: 'info',
+        confirmButtonText: 'Get Started',
+        confirmButtonColor: '#4f46e5',
+        timer: 5000,
+        timerProgressBar: true
+      });
+    });
+
+    function formatPhoneInput(e) {
+      let value = e.target.value.replace(/[^0-9]/g, '');
+      if (value.length > 0) {
+        if (value.startsWith('0')) {
+          value = value.substring(0, 10);
+        } else if (value.startsWith('255')) {
+          value = value.substring(0, 12);
+        } else {
+          value = value.substring(0, 9);
+        }
+      }
+      e.target.value = value;
+    }
+
+    function formatCurrencyInput(e) {
+      let value = e.target.value.replace(/[^0-9]/g, '');
+      if (value.length > 0) {
+        value = parseInt(value, 10).toLocaleString('en-US');
+      }
+      e.target.value = value;
+    }
+
+    function parseCurrencyInput(value) {
+      return parseInt(value.replace(/,/g, ''), 10) || 0;
+    }
+
+    function formatDate() {
+      return new Date().toLocaleDateString('en-US', {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function formatTZS(amount) {
+      return amount.toLocaleString('en-US') + '/=';
+    }
+
+    function sanitizeInput(input) {
+      if (!input) return '';
+      return input.toString().replace(/[<>&"']/g, (char) => ({
+        '<': '&lt;',
+        '>': '&gt;',
+        '&': '&amp;',
+        '"': '&quot;',
+        "'": '&#39;'
+      }[char]));
+    }
+
+    async function clearForm() {
+      const result = await Swal.fire({
+        title: 'Clear Form?',
+        text: 'This will reset all fields. Continue?',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: 'Yes, clear it!'
+      });
+
+      if (result.isConfirmed) {
+        document.getElementById('customerName').value = '';
+        document.getElementById('product').value = '';
+        document.getElementById('amount').value = '';
+        document.getElementById('method').value = '';
+        document.getElementById('phone').value = '';
+        document.getElementById('receiptBox').style.display = 'none';
+        document.getElementById('actionButtons').classList.add('hidden');
+        document.getElementById('qrcode').innerHTML = '';
+        document.getElementById('customerName').focus();
+
+        Swal.fire({
+          title: 'Form Cleared',
+          text: 'All fields have been reset.',
+          icon: 'success',
+          confirmButtonColor: '#4f46e5',
+          timer: 1500,
+          timerProgressBar: true
+        });
+      }
+    }
+
+    async function generateReceipt() {
+      const customer = sanitizeInput(document.getElementById('customerName').value.trim());
+      const product = sanitizeInput(document.getElementById('product').value.trim());
+      const amount = parseCurrencyInput(document.getElementById('amount').value);
+      const method = document.getElementById('method').value || 'Not specified';
+      const phone = sanitizeInput(document.getElementById('phone').value.trim());
+      const tin = '142-388-375';
+
+      if (!customer) {
+        Swal.fire({
+          title: 'Missing Customer Name',
+          text: 'Please enter the customer name.',
+          icon: 'error',
+          confirmButtonColor: '#4f46e5'
+        });
+        document.getElementById('customerName').focus();
+        return;
+      }
+      if (!product) {
+        Swal.fire({
+          title: 'Missing Product/Service',
+          text: 'Please enter the product or service description.',
+          icon: 'error',
+          confirmButtonColor: '#4f46e5'
+        });
+        document.getElementById('product').focus();
+        return;
+      }
+      if (amount <= 0) {
+        Swal.fire({
+          title: 'Invalid Amount',
+          text: 'Please enter a valid amount greater than zero.',
+          icon: 'error',
+          confirmButtonColor: '#4f46e5'
+        });
+        document.getElementById('amount').focus();
+        return;
+      }
+
+      const { isConfirmed } = await Swal.fire({
+        title: 'Confirm Receipt Details',
+        html: `
+          <p><strong>Customer:</strong> ${customer}</p>
+          <p><strong>Product/Service:</strong> ${product}</p>
+          <p><strong>Amount:</strong> TSh ${formatTZS(amount)}</p>
+          <p><strong>Payment Method:</strong> ${method}</p>
+          ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
+        `,
+        icon: 'question',
+        showCancelButton: true,
+        confirmButtonColor: '#4f46e5',
+        cancelButtonColor: '#ef4444',
+        confirmButtonText: 'Generate Receipt'
+      });
+
+      if (!isConfirmed) return;
+
+      Swal.fire({
+        title: 'Generating Receipt...',
+        text: 'Please wait while we create your receipt.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      document.getElementById('rCustomer').textContent = customer;
+      document.getElementById('rProduct').textContent = product;
+      document.getElementById('rAmount').textContent = formatTZS(amount);
+      document.getElementById('rTotal').textContent = formatTZS(amount);
+      document.getElementById('rMethod').textContent = method;
+      document.getElementById('rTin').textContent = tin;
+      document.getElementById('rDate').textContent = formatDate();
+
+      if (phone) {
+        document.getElementById('rPhone').textContent = phone;
+        document.getElementById('rPhoneContainer').style.display = 'flex';
+      } else {
+        document.getElementById('rPhoneContainer').style.display = 'none';
+      }
+
+      const qrText = `GSON RECEIPT\nTIN: ${tin}\nDate: ${formatDate()}\nCustomer: ${customer}\n${phone ? `Phone: ${phone}\n` : ''}Description: ${product}\nAmount: TSh ${formatTZS(amount)}\nMethod: ${method}`;
+      const qrCodeContainer = document.getElementById('qrcode');
+      qrCodeContainer.innerHTML = '';
+      new QRCode(qrCodeContainer, {
+        text: qrText,
+        width: 120,
+        height: 120,
+        colorDark: '#4f46e5',
+        colorLight: '#ffffff',
+        correctLevel: QRCode.CorrectLevel.H
+      });
+
+      document.getElementById('receiptBox').style.display = 'block';
+      document.getElementById('actionButtons').classList.remove('hidden');
+      document.getElementById('receiptBox').classList.add('fade-in');
+
+      // Scroll to receipt
+      document.getElementById('receiptBox').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      Swal.fire({
+        title: 'Receipt Generated!',
+        text: 'Your receipt is ready. You can print or save it as a PDF.',
+        icon: 'success',
+        confirmButtonColor: '#4f46e5',
+        timer: 2000,
+        timerProgressBar: true
+      });
+    }
+
+    async function printReceipt() {
+      const printBtn = document.getElementById('printBtn');
+      const originalText = printBtn.innerHTML;
+      printBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Preparing...';
+      printBtn.disabled = true;
+
+      await Swal.fire({
+        title: 'Preparing to Print',
+        text: 'Your receipt is being prepared for printing.',
+        icon: 'info',
+        timer: 1000,
+        timerProgressBar: true,
+        showConfirmButton: false
+      });
+
+      setTimeout(() => {
+        window.print();
+        printBtn.innerHTML = originalText;
+        printBtn.disabled = false;
+      }, 500);
+    }
+
+    async function downloadReceipt() {
+      const receipt = document.getElementById('receiptBox');
+      const actionButtons = document.getElementById('actionButtons');
+      actionButtons.classList.add('no-print');
+      const downloadBtn = document.getElementById('downloadBtn');
+      const originalText = downloadBtn.innerHTML;
+      downloadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generating...';
+      downloadBtn.disabled = true;
+
+      Swal.fire({
+        title: 'Generating PDF...',
+        text: 'Please wait while we create your PDF.',
+        allowOutsideClick: false,
+        didOpen: () => {
+          Swal.showLoading();
+        }
+      });
+
+      // Adjust receipt size for PDF
+      const originalWidth = receipt.style.width;
+      const originalMaxWidth = receipt.style.maxWidth;
+      receipt.style.width = '350px';
+      receipt.style.maxWidth = '350px';
+
+      try {
+        const canvas = await html2canvas(receipt, {
+          scale: 2,
+          logging: false,
+          useCORS: true,
+          allowTaint: true,
+          width: 350,
+          windowWidth: 350
+        });
+
+        // Restore original styles
+        receipt.style.width = originalWidth;
+        receipt.style.maxWidth = originalMaxWidth;
+
+        const imgData = canvas.toDataURL('image/png');
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: [80, 180]
+        });
+
+        const imgWidth = 70;
+        const imgHeight = (canvas.height * imgWidth) / canvas.width;
+        const x = (pdf.internal.pageSize.getWidth() - imgWidth) / 2;
+        const y = 10;
+
+        pdf.addImage(imgData, 'PNG', x, y, imgWidth, imgHeight);
+        pdf.save(`GSON_Receipt_${document.getElementById('rTin').textContent}.pdf`);
+
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
+        actionButtons.classList.remove('no-print');
+
+        Swal.fire({
+          title: 'PDF Saved!',
+          text: 'Your receipt has been downloaded as a PDF.',
+          icon: 'success',
+          confirmButtonColor: '#4f46e5',
+          timer: 2000,
+          timerProgressBar: true
+        });
+      } catch (error) {
+        console.error('Error generating PDF:', error);
+        Swal.fire({
+          title: 'Error',
+          text: 'Failed to generate PDF. Please try again.',
+          icon: 'error',
+          confirmButtonColor: '#4f46e5'
+        });
+        downloadBtn.innerHTML = originalText;
+        downloadBtn.disabled = false;
+        actionButtons.classList.remove('no-print');
+
+        // Restore original styles
+        receipt.style.width = originalWidth;
+        receipt.style.maxWidth = originalMaxWidth;
+      }
+    }
+  </script>
+</body>
+</html>
